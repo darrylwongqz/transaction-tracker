@@ -11,7 +11,6 @@ async function bootstrap() {
       'API for tracking Uniswap WETH-USDC transactions and related pricing',
     )
     .setVersion('1.0')
-    .addTag('transactions') // Example tag for transactions
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
