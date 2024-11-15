@@ -1,6 +1,6 @@
 import { IsNumber, IsNotEmpty } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEthereumAddress } from '../../../common/decorators/is-ethereum-address.decorator';
+import { IsEthereumAddress } from '../../../../common/decorators/is-ethereum-address.decorator';
 
 export class TokenTransferEventsDto {
   @ApiProperty({
