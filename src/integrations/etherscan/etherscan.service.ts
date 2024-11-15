@@ -3,7 +3,6 @@ import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { TokenTransferEventsDto } from './dtos/token-transfer-events.dto';
 import { TokenTransferEventsResponseEntity } from './entities/token-transfer-events-response.entity';
-import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class EtherscanService {
@@ -32,22 +31,20 @@ export class EtherscanService {
   async getTokenTransferEvents(
     tokenTransferEventsDto: TokenTransferEventsDto,
   ): Promise<TokenTransferEventsResponseEntity> {
-    const response = await firstValueFrom(
-      this.httpService.get(this.BASE_URL, {
-        params: {
-          module: 'account',
-          action: 'tokentx',
-          contractaddress: tokenTransferEventsDto.contractAddress,
-          address: tokenTransferEventsDto.address,
-          page: 1,
-          offset: 10000,
-          startblock: tokenTransferEventsDto.startBlock,
-          endblock: tokenTransferEventsDto.endBlock,
-          sort: 'asc',
-          apikey: this.apiKey,
-        },
-      }),
-    );
+    const response = await this.httpService.axiosRef.get(this.BASE_URL, {
+      params: {
+        module: 'account',
+        action: 'tokentx',
+        contractaddress: tokenTransferEventsDto.contractAddress,
+        address: tokenTransferEventsDto.address,
+        page: 1,
+        offset: 10000,
+        startblock: tokenTransferEventsDto.startBlock,
+        endblock: tokenTransferEventsDto.endBlock,
+        sort: 'asc',
+        apikey: this.apiKey,
+      },
+    });
 
     let events = response.data.result;
     let isTrimmed = false;
