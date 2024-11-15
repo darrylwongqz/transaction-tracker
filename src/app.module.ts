@@ -4,7 +4,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { getDatabaseConfig } from './config/database-config';
+import { PoolsModule } from './pools/pools.module';
+import { TransactionsModule } from './transactions/transactions.module';
+import { SyncModule } from './sync/sync.module';
 import * as Joi from 'joi';
+import { EtherscanModule } from './integrations/etherscan/etherscan.module';
+import { BinanceModule } from './integrations/binance/binance.module';
+import { PricingModule } from './pricing/pricing.module';
 
 @Module({
   imports: [
@@ -24,6 +30,12 @@ import * as Joi from 'joi';
       inject: [ConfigService],
       useFactory: getDatabaseConfig, // Use the getDatabaseConfig function
     }),
+    PoolsModule,
+    TransactionsModule,
+    SyncModule,
+    EtherscanModule,
+    BinanceModule,
+    PricingModule,
   ],
   controllers: [AppController],
   providers: [AppService],
