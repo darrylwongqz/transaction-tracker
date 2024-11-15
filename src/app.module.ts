@@ -11,6 +11,9 @@ import * as Joi from 'joi';
 import { EtherscanModule } from './integrations/etherscan/etherscan.module';
 import { BinanceModule } from './integrations/binance/binance.module';
 import { PricingModule } from './pricing/pricing.module';
+import type { RedisClientOptions } from 'redis';
+import { CacheModule } from '@nestjs/cache-manager';
+import { getCacheConfig } from './config/cache-config';
 
 @Module({
   imports: [
@@ -29,6 +32,12 @@ import { PricingModule } from './pricing/pricing.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: getDatabaseConfig, // Use the getDatabaseConfig function
+    }),
+    CacheModule.registerAsync<RedisClientOptions>({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: getCacheConfig,
+      isGlobal: true,
     }),
     PoolsModule,
     TransactionsModule,
