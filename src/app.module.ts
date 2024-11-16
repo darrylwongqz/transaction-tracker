@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
@@ -26,6 +26,11 @@ import { getCacheConfig } from './config/cache-config';
         DATABASE_USERNAME: Joi.string().required(),
         DATABASE_PASSWORD: Joi.string().required(),
         DATABASE_NAME: Joi.string().required(),
+        REDIS_HOST: Joi.string().default('localhost'),
+        REDIS_PORT: Joi.number().default(6379),
+        NODE_ENV: Joi.string()
+          .valid('development', 'production')
+          .default('development'),
       }),
     }),
     TypeOrmModule.forRootAsync({
@@ -47,6 +52,6 @@ import { getCacheConfig } from './config/cache-config';
     PricingModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, Logger],
 })
 export class AppModule {}

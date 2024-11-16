@@ -1,5 +1,7 @@
 import { ConfigService } from '@nestjs/config';
 import * as redisStore from 'cache-manager-ioredis';
+import { Logger } from '@nestjs/common';
+import Redis from 'ioredis';
 
 export const getCacheConfig = (
   configService: ConfigService,
@@ -8,12 +10,50 @@ export const getCacheConfig = (
   host: string;
   port: number;
   ttl: number;
-} => ({
-  store: redisStore,
-  host:
-    process.env.NODE_ENV === 'development'
-      ? configService.get<string>('REDIS_HOST_DEV', 'localhost')
-      : configService.get<string>('REDIS_HOST', 'redis'),
-  port: configService.get<number>('REDIS_PORT', 6379),
-  ttl: 600,
-});
+  redisInstance?: Redis;
+  options?: Record<string, any>;
+} => {
+  const logger = new Logger('RedisCache');
+  const redisClient = new Redis({
+    host:
+      process.env.NODE_ENV === 'development'
+        ? configService.get<string>('REDIS_HOST_DEV', 'localhost')
+        : configService.get<string>('REDIS_HOST', 'redis'),
+    port: configService.get<number>('REDIS_PORT', 6379),
+  });
+
+  redisClient.on('command', (command) => {
+    logger.log(`Redis Command: ${command.name} ${command.args.join(' ')}`);
+  });
+
+  redisClient.on('error', (err) => {
+    logger.error(`Redis Error: ${err.message}`, err.stack);
+  });
+
+  redisClient.on('connect', () => {
+    logger.log('Connected to Redis');
+  });
+
+  redisClient.on('ready', () => {
+    logger.log('Redis is ready');
+  });
+
+  return {
+    store: redisStore,
+    host:
+      process.env.NODE_ENV === 'development'
+        ? configService.get<string>('REDIS_HOST_DEV', 'localhost')
+        : configService.get<string>('REDIS_HOST', 'redis'),
+    port: configService.get<number>('REDIS_PORT', 6379),
+    ttl: 1, // Default TTL
+    redisInstance: redisClient, // Attach custom Redis client
+    options: {
+      retryStrategy: (times: number) => {
+        if (times > 3) {
+          return new Error('Redis connection failed after 3 retries');
+        }
+        return Math.min(times * 50, 2000); // Exponential backoff
+      },
+    },
+  };
+};
