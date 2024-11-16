@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
-import { TokenTransferEventsDto } from './dtos/token-transfer-events.dto';
-import { TokenTransferEventsResponseEntity } from './entities/token-transfer-events-response.entity';
+import { TokenTransferEventsDto } from './dtos/request/token-transfer-events.dto';
+import { TokenTransferEventsResponseDto } from './dtos/response/token-transfer-events-response.dto';
 
 @Injectable()
 export class EtherscanService {
@@ -30,7 +30,7 @@ export class EtherscanService {
    */
   async getTokenTransferEvents(
     tokenTransferEventsDto: TokenTransferEventsDto,
-  ): Promise<TokenTransferEventsResponseEntity> {
+  ): Promise<TokenTransferEventsResponseDto> {
     const response = await this.httpService.axiosRef.get(this.BASE_URL, {
       params: {
         module: 'account',

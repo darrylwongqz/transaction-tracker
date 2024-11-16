@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { EventEntity } from './event.entity';
+import { EventEntity } from '../../entities/event.entity';
 
-export class TokenTransferEventsResponseEntity {
+export class TokenTransferEventsResponseDto {
   @ApiProperty({
     description: 'The total number of events returned.',
     example: 25,
