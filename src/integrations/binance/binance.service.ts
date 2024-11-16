@@ -3,9 +3,12 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import {
   BINANCE_BASE_URL,
   BINANCE_KLINES_ENDPOINT,
-} from './constants/binance-api-constants';
-import { KlineParamDto } from './dtos/request/kline-param.dto';
-import { KlineDto, KlineResponseDto } from './dtos/response/kline-response.dto';
+} from './constants/binance-api.constants';
+import { BinanceKlineParamDto } from './dtos/request/binance-kline-param.dto';
+import {
+  BinanceKlineDto,
+  BinanceKlineResponseDto,
+} from './dtos/response/binance-kline-response.dto';
 
 @Injectable()
 export class BinanceService {
@@ -16,7 +19,9 @@ export class BinanceService {
    * @param params - Query parameters for Kline data
    * @returns A Promise that resolves to the KlineResponseDto
    */
-  async getKlineData(params: KlineParamDto): Promise<KlineResponseDto> {
+  async getKlineData(
+    params: BinanceKlineParamDto,
+  ): Promise<BinanceKlineResponseDto> {
     if (!params.symbol || !params.interval) {
       throw new BadRequestException('Symbol and interval are required fields');
     }
@@ -46,7 +51,7 @@ export class BinanceService {
    * @param rawKlines - Array of raw Kline data from Binance API
    * @returns Array of structured KlineDto objects
    */
-  private mapKlines(rawKlines: any[]): KlineDto[] {
+  private mapKlines(rawKlines: any[]): BinanceKlineDto[] {
     if (!Array.isArray(rawKlines)) {
       throw new BadRequestException('Invalid Kline data format');
     }
@@ -68,7 +73,7 @@ export class BinanceService {
         numberOfTrades: kline[8],
         takerBuyBaseVolume: kline[9],
         takerBuyQuoteVolume: kline[10],
-      } as KlineDto;
+      } as BinanceKlineDto;
     });
   }
 }

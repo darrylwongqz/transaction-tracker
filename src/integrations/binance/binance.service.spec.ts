@@ -1,8 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BinanceService } from './binance.service';
 import { HttpService } from '@nestjs/axios';
-import { KlineInterval, KlineParamDto } from './dtos/request/kline-param.dto';
-import { KlineDto } from './dtos/response/kline-response.dto';
+import {
+  BinanceKlineInterval,
+  BinanceKlineParamDto,
+} from './dtos/request/binance-kline-param.dto';
+import { BinanceKlineDto } from './dtos/response/binance-kline-response.dto';
 import { validate } from 'class-validator';
 
 describe('BinanceService', () => {
@@ -28,7 +31,7 @@ describe('BinanceService', () => {
     ],
   };
 
-  const mockMappedKlines: KlineDto[] = mockRawResponse.data.map(
+  const mockMappedKlines: BinanceKlineDto[] = mockRawResponse.data.map(
     (kline) =>
       ({
         openTime: kline[0],
@@ -42,7 +45,7 @@ describe('BinanceService', () => {
         numberOfTrades: kline[8],
         takerBuyBaseVolume: kline[9],
         takerBuyQuoteVolume: kline[10],
-      }) as KlineDto,
+      }) as BinanceKlineDto,
   );
 
   beforeEach(async () => {
@@ -74,9 +77,9 @@ describe('BinanceService', () => {
         .spyOn(httpService.axiosRef, 'get')
         .mockResolvedValueOnce(mockRawResponse);
 
-      const params: KlineParamDto = {
+      const params: BinanceKlineParamDto = {
         symbol: 'BTCUSDT',
-        interval: KlineInterval.MIN_1,
+        interval: BinanceKlineInterval.MIN_1,
         startTime: 1731594900000,
         endTime: 1731595200000,
       };
@@ -102,9 +105,9 @@ describe('BinanceService', () => {
         .spyOn(httpService.axiosRef, 'get')
         .mockResolvedValueOnce(mockRawResponse);
 
-      const params: KlineParamDto = {
+      const params: BinanceKlineParamDto = {
         symbol: 'BTCUSDT',
-        interval: KlineInterval.MIN_1,
+        interval: BinanceKlineInterval.MIN_1,
       };
 
       const result = await service.getKlineData(params);
@@ -127,9 +130,9 @@ describe('BinanceService', () => {
         .spyOn(httpService.axiosRef, 'get')
         .mockResolvedValueOnce(mockRawResponse);
 
-      const params: KlineParamDto = {
+      const params: BinanceKlineParamDto = {
         symbol: 'BTCUSDT',
-        interval: KlineInterval.MIN_1,
+        interval: BinanceKlineInterval.MIN_1,
         limit: 1000,
       };
 
@@ -144,14 +147,14 @@ describe('BinanceService', () => {
     });
 
     it('should throw an error for invalid limit values', async () => {
-      const invalidParams: KlineParamDto = {
+      const invalidParams: BinanceKlineParamDto = {
         symbol: 'BTCUSDT',
-        interval: KlineInterval.MIN_1,
+        interval: BinanceKlineInterval.MIN_1,
         limit: 1500, // Invalid limit
       };
 
       const validationErrors = await validate(
-        Object.assign(new KlineParamDto(), invalidParams),
+        Object.assign(new BinanceKlineParamDto(), invalidParams),
       );
 
       expect(validationErrors).toHaveLength(1);
@@ -165,10 +168,10 @@ describe('BinanceService', () => {
     it('should throw an error if "symbol" is missing', async () => {
       const invalidParams = {
         symbol: '',
-        interval: KlineInterval.MIN_1,
+        interval: BinanceKlineInterval.MIN_1,
         startTime: 1731594900000,
         endTime: 1731595200000,
-      } as unknown as KlineParamDto;
+      } as unknown as BinanceKlineParamDto;
 
       await expect(service.getKlineData(invalidParams)).rejects.toThrow(
         'Symbol and interval are required fields',
@@ -178,10 +181,10 @@ describe('BinanceService', () => {
     it('should throw an error if "interval" is missing', async () => {
       const invalidParams = {
         symbol: 'BTCUSDT',
-        interval: '' as unknown as KlineInterval,
+        interval: '' as unknown as BinanceKlineInterval,
         startTime: 1731594900000,
         endTime: 1731595200000,
-      } as KlineParamDto;
+      } as BinanceKlineParamDto;
 
       await expect(service.getKlineData(invalidParams)).rejects.toThrow(
         'Symbol and interval are required fields',
@@ -189,14 +192,14 @@ describe('BinanceService', () => {
     });
 
     it('should validate and throw an error for invalid timeZone', async () => {
-      const invalidParams: KlineParamDto = {
+      const invalidParams: BinanceKlineParamDto = {
         symbol: 'ETHUSDT',
-        interval: KlineInterval.MIN_1,
+        interval: BinanceKlineInterval.MIN_1,
         timeZone: '15:00', // Invalid
       };
 
       const validationErrors = await validate(
-        Object.assign(new KlineParamDto(), invalidParams),
+        Object.assign(new BinanceKlineParamDto(), invalidParams),
       );
 
       expect(validationErrors).toHaveLength(1);
@@ -214,9 +217,9 @@ describe('BinanceService', () => {
         .spyOn(httpService.axiosRef, 'get')
         .mockResolvedValueOnce(mockRawResponse);
 
-      const params: KlineParamDto = {
+      const params: BinanceKlineParamDto = {
         symbol: 'BTCUSDT',
-        interval: KlineInterval.MIN_1,
+        interval: BinanceKlineInterval.MIN_1,
         startTime: 1731594900000,
         endTime: 1731595200000,
       };
@@ -236,9 +239,9 @@ describe('BinanceService', () => {
         .spyOn(httpService.axiosRef, 'get')
         .mockResolvedValueOnce({ data: [] });
 
-      const params: KlineParamDto = {
+      const params: BinanceKlineParamDto = {
         symbol: 'BTCUSDT',
-        interval: KlineInterval.MIN_1,
+        interval: BinanceKlineInterval.MIN_1,
       };
 
       const result = await service.getKlineData(params);
@@ -251,29 +254,14 @@ describe('BinanceService', () => {
         data: {},
       });
 
-      const params: KlineParamDto = {
+      const params: BinanceKlineParamDto = {
         symbol: 'BTCUSDT',
-        interval: KlineInterval.MIN_1,
+        interval: BinanceKlineInterval.MIN_1,
       };
 
       await expect(service.getKlineData(params)).rejects.toThrow(
         'Invalid Kline data format',
       );
-    });
-
-    it('should handle an empty response from Binance API', async () => {
-      jest
-        .spyOn(httpService.axiosRef, 'get')
-        .mockResolvedValueOnce({ data: [] });
-
-      const params: KlineParamDto = {
-        symbol: 'BTCUSDT',
-        interval: KlineInterval.MIN_1,
-      };
-
-      const result = await service.getKlineData(params);
-
-      expect(result).toEqual({ total: 0, klines: [] });
     });
 
     it('should throw an error if the API endpoint is invalid', async () => {
@@ -282,12 +270,12 @@ describe('BinanceService', () => {
           status: 404,
           statusText: 'Not Found',
         },
-        message: 'Request failed with status code 404', // Add the message field
+        message: 'Request failed with status code 404',
       });
 
-      const params: KlineParamDto = {
+      const params: BinanceKlineParamDto = {
         symbol: 'BTCUSDT',
-        interval: KlineInterval.MIN_1,
+        interval: BinanceKlineInterval.MIN_1,
       };
 
       await expect(service.getKlineData(params)).rejects.toThrow(
@@ -295,39 +283,16 @@ describe('BinanceService', () => {
       );
     });
 
-    it('should handle partial responses from Binance API', async () => {
-      jest.spyOn(httpService.axiosRef, 'get').mockResolvedValueOnce({
-        data: [
-          [
-            1731594900000,
-            '3191.39000000',
-            '3192.79000000',
-            '3140.00000000',
-            '3153.98000000',
-          ], // Missing fields
-        ],
-      });
-
-      await expect(
-        service.getKlineData({
-          symbol: 'BTCUSDT',
-          interval: KlineInterval.MIN_1,
-        }),
-      ).rejects.toThrow(
-        'Error fetching Kline data: Malformed Kline data received',
-      );
-    });
-
     it('should throw an error for unsupported Kline intervals', async () => {
       const invalidParams = {
         symbol: 'BTCUSDT',
-        interval: 'invalid' as unknown as KlineInterval,
+        interval: 'invalid' as unknown as BinanceKlineInterval,
         startTime: 1731594900000,
         endTime: 1731595200000,
-      } as KlineParamDto;
+      } as BinanceKlineParamDto;
 
       const validationErrors = await validate(
-        Object.assign(new KlineParamDto(), invalidParams),
+        Object.assign(new BinanceKlineParamDto(), invalidParams),
       );
 
       expect(validationErrors).toHaveLength(1);

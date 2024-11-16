@@ -12,7 +12,7 @@ import {
 } from 'class-validator';
 import { IsValidBinanceTimeZone } from '../../../../common/decorators/is-valid-binance-time-zone';
 
-export enum KlineInterval {
+export enum BinanceKlineInterval {
   SECONDS = '1s',
   MIN_1 = '1m',
   MIN_3 = '3m',
@@ -34,7 +34,7 @@ export enum KlineInterval {
 /**
  * Data Transfer Object for the query parameters to fetch Kline data
  */
-export class KlineParamDto {
+export class BinanceKlineParamDto {
   @ApiProperty({
     description: 'The trading pair symbol (e.g., ETHUSDT)',
     example: 'ETHUSDT',
@@ -46,13 +46,13 @@ export class KlineParamDto {
   @ApiProperty({
     description: 'Kline interval (e.g., 1m, 15m, 1h)',
     example: '1m',
-    enum: KlineInterval,
+    enum: BinanceKlineInterval,
   })
   @IsNotEmpty()
-  @IsEnum(KlineInterval, {
+  @IsEnum(BinanceKlineInterval, {
     message: 'interval must be one of the supported values: 1s, 1m, 3m, etc.',
   })
-  interval: KlineInterval;
+  interval: BinanceKlineInterval;
 
   @ApiProperty({
     description: 'Start time in milliseconds (optional, UTC)',
