@@ -1,11 +1,8 @@
 import { BadRequestException } from '@nestjs/common';
-import { CHAIN_MAP } from '../constants/pools.constants';
-import {
-  EthereumAddress,
-  ValidateEthereumAddressDto,
-} from '../dtos/request/validate-ethereum-address.dto';
+import { ValidateEthereumAddressDto } from '../dtos/request/validate-ethereum-address.dto';
 import { BasePoolHandlerService } from './base-pool-handler.service';
 import { EthereumPoolHandler } from './ethereum-pool.handler';
+import { CHAIN_MAP } from '../../common/constants';
 
 describe('EthereumPoolHandler', () => {
   let handler: EthereumPoolHandler;

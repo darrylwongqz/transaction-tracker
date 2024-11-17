@@ -1,11 +1,11 @@
 import { BadRequestException } from '@nestjs/common';
-import { CHAIN_MAP } from '../constants/pools.constants';
 import {
   SolanaAddress,
   ValidateSolanaAddressDto,
 } from '../dtos/request/validate-solana-address.dto';
 import { PoolHandlerInterface } from '../interfaces/pool-handler.interface';
 import { BasePoolHandlerService } from './base-pool-handler.service';
+import { CHAIN_MAP } from '../../common/constants';
 
 export class SolanaPoolHandler
   implements PoolHandlerInterface<ValidateSolanaAddressDto, SolanaAddress>

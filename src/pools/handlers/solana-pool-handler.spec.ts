@@ -1,11 +1,11 @@
 import { BadRequestException } from '@nestjs/common';
-import { CHAIN_MAP } from '../constants/pools.constants';
 import {
   SolanaAddress,
   ValidateSolanaAddressDto,
 } from '../dtos/request/validate-solana-address.dto';
 import { BasePoolHandlerService } from './base-pool-handler.service';
 import { SolanaPoolHandler } from './solana-pool.handler';
+import { CHAIN_MAP } from '../../common/constants';
 
 describe('SolanaPoolHandler', () => {
   let handler: SolanaPoolHandler;

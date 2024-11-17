@@ -1,4 +1,4 @@
-import { CHAIN_MAP } from '../constants/pools.constants';
+import { CHAIN_MAP } from '../../common/constants';
 import {
   EthereumAddress,
   ValidateEthereumAddressDto,
