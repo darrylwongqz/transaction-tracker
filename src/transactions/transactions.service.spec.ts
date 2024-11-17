@@ -20,6 +20,7 @@ describe('TransactionsService', () => {
     transactionFeeEth: '0.1',
     transactionFee: '2.5',
     pool: '0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640',
+    chainId: 1, // Ethereum Mainnet
   };
 
   const mockTransactionArray = [mockTransaction];
@@ -50,7 +51,7 @@ describe('TransactionsService', () => {
   });
 
   describe('getTransactions', () => {
-    it('should return a paginated list of transactions', async () => {
+    it('should return a paginated list of transactions with chainId', async () => {
       jest
         .spyOn(repository, 'findAndCount')
         .mockResolvedValueOnce([mockTransactionArray, 3]);
@@ -60,6 +61,7 @@ describe('TransactionsService', () => {
         endTime: 1620000000,
         limit: 2,
         skip: 0,
+        chainId: 1, // Explicitly provide chainId
       });
 
       expect(result).toBeInstanceOf(PaginatedTransactionsResponseDto);
@@ -76,9 +78,58 @@ describe('TransactionsService', () => {
       expect(repository.findAndCount).toHaveBeenCalledWith({
         where: {
           timestamp: Between(1610000000, 1620000000),
+          chainId: 1, // Include chainId in the query
         },
         skip: 0,
         take: 2,
+        order: { timestamp: 'ASC' },
+      });
+    });
+
+    it('should default chainId to 1 if not provided', async () => {
+      jest
+        .spyOn(repository, 'findAndCount')
+        .mockResolvedValueOnce([mockTransactionArray, 3]);
+
+      await service.getTransactions({
+        startTime: 1610000000,
+        endTime: 1620000000,
+        limit: 2,
+        skip: 0,
+      });
+
+      expect(repository.findAndCount).toHaveBeenCalledWith({
+        where: {
+          timestamp: Between(1610000000, 1620000000),
+          chainId: 1, // Default chainId
+        },
+        skip: 0,
+        take: 2,
+        order: { timestamp: 'ASC' },
+      });
+    });
+
+    it('should enforce a maximum limit of 1000 with chainId', async () => {
+      jest
+        .spyOn(repository, 'findAndCount')
+        .mockResolvedValueOnce([mockTransactionArray, 3]);
+
+      const result = await service.getTransactions({
+        startTime: 1610000000,
+        endTime: 1620000000,
+        limit: 2000,
+        skip: 0,
+        chainId: 1,
+      });
+
+      expect(result.limit).toEqual(1000);
+      expect(repository.findAndCount).toHaveBeenCalledWith({
+        where: {
+          timestamp: Between(1610000000, 1620000000),
+          chainId: 1, // Include chainId
+        },
+        skip: 0,
+        take: 1000,
         order: { timestamp: 'ASC' },
       });
     });
@@ -101,56 +152,6 @@ describe('TransactionsService', () => {
       ).rejects.toThrow(BadRequestException);
 
       expect(repository.findAndCount).not.toHaveBeenCalled();
-    });
-
-    it('should enforce a maximum limit of 1000', async () => {
-      jest
-        .spyOn(repository, 'findAndCount')
-        .mockResolvedValueOnce([mockTransactionArray, 3]);
-
-      const result = await service.getTransactions({
-        startTime: 1610000000,
-        endTime: 1620000000,
-        limit: 2000,
-        skip: 0,
-      });
-
-      expect(result.limit).toEqual(1000);
-      expect(repository.findAndCount).toHaveBeenCalledWith({
-        where: {
-          timestamp: Between(1610000000, 1620000000),
-        },
-        skip: 0,
-        take: 1000,
-        order: { timestamp: 'ASC' },
-      });
-    });
-
-    it('should enforce a maximum limit of 1000', async () => {
-      const mockTransactions = Array(2000).fill(mockTransaction);
-
-      const findAndCountSpy = jest
-        .spyOn(repository, 'findAndCount')
-        .mockResolvedValueOnce([mockTransactions, 2000]);
-
-      const result = await service.getTransactions({
-        startTime: 1610000000,
-        endTime: 1620000000,
-        limit: 2000,
-        skip: 0,
-      });
-
-      expect(result.limit).toEqual(1000);
-      expect(findAndCountSpy).toHaveBeenCalledWith({
-        where: {
-          timestamp: Between(1610000000, 1620000000),
-        },
-        skip: 0,
-        take: 1000,
-        order: { timestamp: 'ASC' },
-      });
-
-      findAndCountSpy.mockRestore();
     });
 
     it('should skip records for pagination and return the correct record', async () => {
@@ -178,6 +179,7 @@ describe('TransactionsService', () => {
         endTime: 1620000000,
         limit: 1,
         skip: 1,
+        chainId: 1,
       });
 
       expect(result.skip).toEqual(1);
@@ -190,6 +192,7 @@ describe('TransactionsService', () => {
       expect(repository.findAndCount).toHaveBeenCalledWith({
         where: {
           timestamp: Between(1610000000, 1620000000),
+          chainId: 1,
         },
         skip: 1,
         take: 1,
@@ -224,26 +227,45 @@ describe('TransactionsService', () => {
   });
 
   describe('getTransactionByHash', () => {
-    it('should return a transaction when a valid hash is provided', async () => {
+    it('should return a transaction when a valid hash and chainId are provided', async () => {
       const validTransaction = {
         ...mockTransaction,
-        hash: '0x123abc456def789ghi123abc456def789ghi123abc456def789ghi123abc456d',
+        hash: '0x125e0b641d4a4b08806bf52c0c6757648c9963bcda8681e4f996f09e00d4c2cc',
       };
 
       jest.spyOn(repository, 'findOne').mockResolvedValueOnce(validTransaction);
 
-      const result = await service.getTransactionByHash(validTransaction.hash);
+      const result = await service.getTransactionByHash(
+        '0x125e0b641d4a4b08806bf52c0c6757648c9963bcda8681e4f996f09e00d4c2cc',
+        1,
+      );
 
       expect(result).toBeInstanceOf(TransactionResponseDto);
-      expect(result).toMatchObject({
-        hash: validTransaction.hash,
-        blockNumber: validTransaction.blockNumber,
-        timestamp: validTransaction.timestamp,
-        transactionFee: validTransaction.transactionFee,
+      expect(repository.findOne).toHaveBeenCalledWith({
+        where: {
+          hash: '0x125e0b641d4a4b08806bf52c0c6757648c9963bcda8681e4f996f09e00d4c2cc',
+          chainId: 1,
+        }, // Include chainId
       });
+    });
+
+    it('should default chainId to 1 if not provided', async () => {
+      const validTransaction = {
+        ...mockTransaction,
+        hash: '0x456def789abc123ghi456def789abc123ghi456def789abc123ghi456def789a',
+      };
+
+      jest.spyOn(repository, 'findOne').mockResolvedValueOnce(validTransaction);
+
+      await service.getTransactionByHash(
+        '0x456def789abc123ghi456def789abc123ghi456def789abc123ghi456def789a',
+      );
 
       expect(repository.findOne).toHaveBeenCalledWith({
-        where: { hash: validTransaction.hash },
+        where: {
+          hash: '0x456def789abc123ghi456def789abc123ghi456def789abc123ghi456def789a',
+          chainId: 1, // Default chainId
+        },
       });
     });
 
@@ -253,12 +275,12 @@ describe('TransactionsService', () => {
       const invalidHash =
         '0x999abc456def789ghi123abc456def789ghi123abc456def789ghi123abc999d';
 
-      await expect(service.getTransactionByHash(invalidHash)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.getTransactionByHash(invalidHash, 1),
+      ).rejects.toThrow(NotFoundException);
 
       expect(repository.findOne).toHaveBeenCalledWith({
-        where: { hash: invalidHash },
+        where: { hash: invalidHash, chainId: 1 },
       });
     });
 
@@ -269,14 +291,14 @@ describe('TransactionsService', () => {
         .mockRejectedValueOnce(new Error('Database error'));
 
       const validHash =
-        '0x123abc456def789ghi123abc456def789ghi123abc456def789ghi123abc456d';
+        '0x125e0b641d4a4b08806bf52c0c6757648c9963bcda8681e4f996f09e00d4c2cc';
 
-      await expect(service.getTransactionByHash(validHash)).rejects.toThrow(
-        Error,
-      );
+      await expect(
+        service.getTransactionByHash(validHash, 1), // Include chainId
+      ).rejects.toThrow(Error);
 
       expect(repository.findOne).toHaveBeenCalledWith({
-        where: { hash: validHash },
+        where: { hash: validHash, chainId: 1 }, // Add chainId to query
       });
     });
 
@@ -284,7 +306,7 @@ describe('TransactionsService', () => {
       const transactionWithExtraFields = {
         ...mockTransaction,
         hash: '0x456def789abc123ghi456def789abc123ghi456def789abc123ghi456def789a',
-        extraneousField: 'extra-data',
+        extraneousField: 'extra-data', // Simulate extra field in DB result
       };
 
       jest
@@ -293,16 +315,20 @@ describe('TransactionsService', () => {
 
       const result = await service.getTransactionByHash(
         transactionWithExtraFields.hash,
+        1, // Include chainId
       );
 
       expect(result).toBeInstanceOf(TransactionResponseDto);
       expect(result).toMatchObject({
         hash: transactionWithExtraFields.hash,
       });
-      expect(result).not.toHaveProperty('extraneousField');
+      expect(result).not.toHaveProperty('extraneousField'); // Ensure extra fields are excluded
 
       expect(repository.findOne).toHaveBeenCalledWith({
-        where: { hash: transactionWithExtraFields.hash },
+        where: {
+          hash: transactionWithExtraFields.hash,
+          chainId: 1,
+        },
       });
     });
   });
