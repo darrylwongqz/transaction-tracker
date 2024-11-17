@@ -37,7 +37,7 @@ export class TransactionsService {
   async getTransactions(
     query: TransactionsQueryDto,
   ): Promise<PaginatedTransactionsResponseDto> {
-    const { startTime, endTime, limit = 10, skip = 0 } = query;
+    const { startTime, endTime, limit = 10, skip = 0, chainId = 1 } = query;
 
     if (!startTime || !endTime) {
       throw new BadRequestException('startTime and endTime are required');
@@ -51,6 +51,7 @@ export class TransactionsService {
     const [results, total] = await this.transactionRepository.findAndCount({
       where: {
         timestamp: Between(startTime, endTime),
+        chainId,
       },
       skip,
       take: cappedLimit,
@@ -78,9 +79,12 @@ export class TransactionsService {
    * @returns A promise that resolves to a `TransactionResponseDto` containing transaction details.
    * @throws NotFoundException if the transaction with the specified hash is not found.
    */
-  async getTransactionByHash(hash: string): Promise<TransactionResponseDto> {
+  async getTransactionByHash(
+    hash: string,
+    chainId: number = 1,
+  ): Promise<TransactionResponseDto> {
     const transaction = await this.transactionRepository.findOne({
-      where: { hash },
+      where: { hash, chainId },
     });
     if (!transaction) {
       throw new NotFoundException('Transaction not found');
@@ -130,9 +134,4 @@ export class TransactionsService {
     await Promise.all(bulkOperations);
     return true;
   }
-
-  //   async getTransactionFee(hash: string) {
-  //     console.log(hash);
-  //     return { fee: 30 };
-  //   }
 }

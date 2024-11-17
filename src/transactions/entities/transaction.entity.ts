@@ -3,7 +3,7 @@ import { Column, Entity, Index, PrimaryColumn } from 'typeorm';
 
 @Entity('transactions')
 @Index('idx_timestamp', ['timestamp'])
-@Index('idx_pool', ['pool'])
+@Index('idx_pool_chain', ['pool', 'chainId']) // New composite index for pool and chainId
 export class TransactionEntity {
   @ApiProperty({
     description: 'Unique transaction hash, serving as the primary key.',
@@ -33,6 +33,13 @@ export class TransactionEntity {
   })
   @Column({ name: 'pool' })
   pool: string;
+
+  @ApiProperty({
+    description: 'Chain ID where the transaction occurred.',
+    example: 1, // Ethereum Mainnet
+  })
+  @Column({ name: 'chain_id' }) // New chainId column
+  chainId: number;
 
   @ApiProperty({
     description: 'Gas price used for the transaction (in Gwei).',

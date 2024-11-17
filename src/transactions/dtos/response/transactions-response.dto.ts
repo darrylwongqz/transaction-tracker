@@ -31,4 +31,11 @@ export class TransactionResponseDto {
     example: 22.28,
   })
   transactionFee: number;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Chain ID of the blockchain where this transaction occurred.',
+    example: 1,
+  })
+  chainId: number;
 }
