@@ -1,6 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Column, Entity, Index, PrimaryColumn } from 'typeorm';
 
+/**
+ * TransactionEntity represents a blockchain transaction.
+ * This implementation is currently optimized for Ethereum-based networks.
+ *
+ * Future extensibility for other blockchains (e.g., Solana):
+ * - Add fields specific to the chain, such as `nativeFee` for Solana.
+ * - Consider creating a `chain_specific_data` JSON field for highly dynamic or chain-specific data.
+ * - Update the services to calculate fees and handle gas/fee differences across chains.
+ * - Possible to also consider splitting the transactions to transactions_eth, transactions_sol etc.
+ */
 @Entity('transactions')
 @Index('idx_timestamp', ['timestamp'])
 @Index('idx_pool_chain', ['pool', 'chainId']) // New composite index for pool and chainId
