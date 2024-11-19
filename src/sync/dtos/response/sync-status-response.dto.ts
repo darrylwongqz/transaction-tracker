@@ -32,8 +32,9 @@ export class SyncStatusResponseDto {
 
   @Expose()
   @ApiProperty({
-    description: 'Pool address that sync status ran for',
-    example: 1,
+    description:
+      'Pool address that sync status ran for, e.g. USDC-WETH on Ethereum Mainnet (chainId = 1)',
+    example: '0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640',
   })
   poolAddress: string;
 }

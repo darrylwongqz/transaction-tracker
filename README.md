@@ -123,6 +123,7 @@ Monitor and manage background queues via the BullMQ Dashboard:
 [http://localhost:3000/sync/queues](http://localhost:3000/sync/queues)
 
 ### **Detailed Writeup Explaining Architectural Decisions & More**
+[https://docs.google.com/document/d/19VTtZc78U4LMXLZIaYyzk-t05kSo8XQFT5ERwjKouOs/edit?tab=t.0#heading=h.whizzzusmaeu](https://docs.google.com/document/d/19VTtZc78U4LMXLZIaYyzk-t05kSo8XQFT5ERwjKouOs/edit?tab=t.0#heading=h.whizzzusmaeu)
 
 ---
 

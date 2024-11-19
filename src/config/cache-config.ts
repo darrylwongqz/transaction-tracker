@@ -49,7 +49,7 @@ export const getCacheConfig = (
     store: redisStore,
     host: redisHost,
     port: configService.get<number>('REDIS_PORT', 6379),
-    ttl: 1, // Default TTL
+    ttl: 60, // Default TTL
     redisInstance: redisClient, // Attach custom Redis client
     options: {
       retryStrategy: (times: number) => {
