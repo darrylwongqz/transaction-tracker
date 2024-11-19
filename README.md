@@ -81,6 +81,9 @@ npm install
 
 3. Access the following once initialized:
    - **Swagger API Documentation**: [http://localhost:3000/documentation](http://localhost:3000/documentation)
+   - **PhpMyAdmin Interface**: [http://localhost:8080](http://localhost:8080)
+     - Username: root
+     - Password: abc123
 
 ---
 
