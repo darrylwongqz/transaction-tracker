@@ -5,7 +5,7 @@ export class CreatePoolsTable1731772561799 implements MigrationInterface {
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `CREATE TABLE \`pools\` (\`id\` int NOT NULL AUTO_INCREMENT, \`address\` varchar(255) NOT NULL, \`chain_id\` int NOT NULL, \`current_block\` bigint NOT NULL DEFAULT '0', UNIQUE INDEX \`uq_pools_address_chain\` (\`address\`, \`chain_id\`), INDEX \`idx_address\` (\`address\`), PRIMARY KEY (\`id\`)) ENGINE=InnoDB`,
+      `CREATE TABLE IF NOT EXISTS \`pools\` (\`id\` int NOT NULL AUTO_INCREMENT, \`address\` varchar(255) NOT NULL, \`chain_id\` int NOT NULL, \`current_block\` bigint NOT NULL DEFAULT '0', UNIQUE INDEX \`uq_pools_address_chain\` (\`address\`, \`chain_id\`), INDEX \`idx_address\` (\`address\`), PRIMARY KEY (\`id\`)) ENGINE=InnoDB`,
     );
   }
 

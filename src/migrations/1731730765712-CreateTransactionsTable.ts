@@ -6,13 +6,14 @@ export class CreateTransactionsTable1731730765712
   name = 'CreateTransactionsTable1731730765712';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // Create the table if it doesn't exist
     await queryRunner.query(
-      `CREATE TABLE \`transactions\` (
+      `CREATE TABLE IF NOT EXISTS \`transactions\` (
         \`hash\` varchar(255) NOT NULL, 
         \`block_number\` int NOT NULL, 
         \`timestamp\` int NOT NULL, 
         \`pool\` varchar(255) NOT NULL, 
-        \`chain_id\` int NOT NULL, 
+        \`chain_id\` int NOT NULL DEFAULT 1, 
         \`gas_price\` varchar(255) NOT NULL, 
         \`gas_used\` varchar(255) NOT NULL, 
         \`transaction_fee_eth\` decimal(38,18) NOT NULL, 
@@ -25,10 +26,13 @@ export class CreateTransactionsTable1731730765712
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
+    // Drop indexes
     await queryRunner.query(`DROP INDEX \`idx_timestamp\` ON \`transactions\``);
     await queryRunner.query(
       `DROP INDEX \`idx_pool_chain\` ON \`transactions\``,
     );
+
+    // Drop the table
     await queryRunner.query(`DROP TABLE \`transactions\``);
   }
 }

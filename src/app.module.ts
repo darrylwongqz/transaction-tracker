@@ -1,4 +1,4 @@
-import { Logger, Module } from '@nestjs/common';
+import { Logger, Module, OnApplicationBootstrap } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
@@ -14,12 +14,16 @@ import { PricingModule } from './pricing/pricing.module';
 import type { RedisClientOptions } from 'redis';
 import { CacheModule } from '@nestjs/cache-manager';
 import { getCacheConfig } from './config/cache-config';
+import { BullModule } from '@nestjs/bullmq';
+import { getBullConfig } from './config/bull-config';
+import { ScheduleModule } from '@nestjs/schedule';
+import { DataSource } from 'typeorm';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true, // Make ConfigModule available throughout the app
-      envFilePath: '.env', // Load environment variables from .env
+      envFilePath: '.env',
       validationSchema: Joi.object({
         DATABASE_HOST: Joi.string().default('localhost'),
         DATABASE_PORT: Joi.number().default(3306),
@@ -29,10 +33,11 @@ import { getCacheConfig } from './config/cache-config';
         REDIS_HOST: Joi.string().default('localhost'),
         REDIS_PORT: Joi.number().default(6379),
         NODE_ENV: Joi.string()
-          .valid('development', 'production')
+          .valid('development', 'production', 'test')
           .default('development'),
       }),
     }),
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -44,6 +49,11 @@ import { getCacheConfig } from './config/cache-config';
       useFactory: getCacheConfig,
       isGlobal: true,
     }),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: getBullConfig,
+    }),
     PoolsModule,
     TransactionsModule,
     SyncModule,
@@ -54,4 +64,18 @@ import { getCacheConfig } from './config/cache-config';
   controllers: [AppController],
   providers: [AppService, Logger],
 })
-export class AppModule {}
+export class AppModule implements OnApplicationBootstrap {
+  private readonly logger = new Logger(AppModule.name);
+
+  constructor(private readonly dataSource: DataSource) {}
+
+  async onApplicationBootstrap() {
+    this.logger.log('Running database migrations...');
+    try {
+      await this.dataSource.runMigrations();
+      await this.logger.log('Database migrations executed successfully.');
+    } catch (error) {
+      this.logger.error('Failed to run database migrations:', error.message);
+    }
+  }
+}

@@ -8,7 +8,12 @@ import {
 } from '@nestjs/common';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const isProduction = process.env.NODE_ENV === 'production';
+  const app = await NestFactory.create(AppModule, {
+    logger: isProduction
+      ? ['log', 'warn', 'error']
+      : ['log', 'warn', 'error', 'debug', 'verbose'],
+  });
 
   // Enable global validation
   app.useGlobalPipes(
