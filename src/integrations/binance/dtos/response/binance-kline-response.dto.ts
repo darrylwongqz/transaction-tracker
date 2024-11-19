@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
 import { IsNumber, IsString, ValidateNested } from 'class-validator';
 
 export class BinanceKlineDto {
@@ -63,10 +63,12 @@ export class BinanceKlineDto {
  * Data Transfer Object for the response from Binance Kline API
  */
 export class BinanceKlineResponseDto {
+  @Expose()
   @ApiProperty({ description: 'Total number of klines returned', example: 500 })
   @IsNumber()
   total: number;
 
+  @Expose()
   @ApiProperty({
     description: 'Array of klines',
     type: [BinanceKlineDto],

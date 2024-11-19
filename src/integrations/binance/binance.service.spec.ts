@@ -1,3 +1,5 @@
+// binance.service.spec.ts
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { BinanceService } from './binance.service';
 import { HttpService } from '@nestjs/axios';
@@ -7,6 +9,7 @@ import {
 } from './dtos/request/binance-kline-param.dto';
 import { BinanceKlineDto } from './dtos/response/binance-kline-response.dto';
 import { validate } from 'class-validator';
+import { Logger, BadRequestException } from '@nestjs/common';
 
 describe('BinanceService', () => {
   let service: BinanceService;
@@ -65,6 +68,15 @@ describe('BinanceService', () => {
 
     service = module.get<BinanceService>(BinanceService);
     httpService = module.get<HttpService>(HttpService);
+
+    // Mock Logger methods to suppress logs during tests
+    jest.spyOn(Logger.prototype, 'log').mockImplementation(() => {});
+    jest.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
+    jest.spyOn(Logger.prototype, 'warn').mockImplementation(() => {});
+    jest.spyOn(Logger.prototype, 'debug').mockImplementation(() => {});
+    jest.spyOn(Logger.prototype, 'verbose').mockImplementation(() => {});
+
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {

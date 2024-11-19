@@ -1,5 +1,5 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import {
   BINANCE_BASE_URL,
   BINANCE_KLINES_ENDPOINT,
@@ -12,6 +12,8 @@ import {
 
 @Injectable()
 export class BinanceService {
+  private readonly logger = new Logger(BinanceService.name);
+
   constructor(private readonly httpService: HttpService) {}
 
   /**
@@ -23,6 +25,7 @@ export class BinanceService {
     params: BinanceKlineParamDto,
   ): Promise<BinanceKlineResponseDto> {
     if (!params.symbol || !params.interval) {
+      this.logger.error('Symbol and interval are required fields');
       throw new BadRequestException('Symbol and interval are required fields');
     }
 
@@ -32,14 +35,33 @@ export class BinanceService {
       timeZone: params.timeZone ?? '0', // Default to UTC if not provided
     };
 
+    this.logger.debug(
+      `Requesting Kline data from Binance API. URL: ${url}, Params: ${JSON.stringify(
+        queryParams,
+      )}`,
+    );
+
     try {
       const response = await this.httpService.axiosRef.get(url, {
         params: queryParams,
       });
+
+      this.logger.debug(
+        `Successfully fetched Kline data. Length: ${response.data.length}`,
+      );
+
       const klines = this.mapKlines(response.data);
+
+      this.logger.log(
+        `Mapped ${klines.length} Kline entries from Binance API response.`,
+      );
 
       return { total: klines.length, klines };
     } catch (error) {
+      this.logger.error(
+        `Error fetching Kline data from Binance API: ${error.message}`,
+        error.stack,
+      );
       throw new BadRequestException(
         `Error fetching Kline data: ${error.message}`,
       );
@@ -53,11 +75,19 @@ export class BinanceService {
    */
   private mapKlines(rawKlines: any[]): BinanceKlineDto[] {
     if (!Array.isArray(rawKlines)) {
+      this.logger.error('Invalid Kline data format received from Binance API');
       throw new BadRequestException('Invalid Kline data format');
     }
 
-    return rawKlines.map((kline) => {
+    this.logger.debug(
+      `Mapping ${rawKlines.length} Kline entries from raw data.`,
+    );
+
+    return rawKlines.map((kline, index) => {
       if (!Array.isArray(kline) || kline.length < 11) {
+        this.logger.warn(
+          `Malformed Kline data at index ${index}: ${JSON.stringify(kline)}`,
+        );
         throw new BadRequestException('Malformed Kline data received');
       }
 
