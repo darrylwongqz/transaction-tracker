@@ -18,5 +18,5 @@
  */
 export const CHAIN_MAP = {
   ETHEREUM_MAINNET: 1, // Ethereum Mainnet Chain ID
-  SOLANA_MAINNET: 101, // Solana Mainnet Chain ID -- NOTE DO NOT USE, ONLY FOR ILLUSTRATIVE PURPOSES
+  // SOLANA_MAINNET: 101, // Solana Mainnet Chain ID -- NOTE DO NOT USE, ONLY FOR ILLUSTRATIVE PURPOSES
 };
