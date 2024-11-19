@@ -1,5 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Column, Entity, Index, PrimaryColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  PrimaryColumn,
+} from 'typeorm';
+import { PoolEntity } from '../../pools/entities/pools.entity';
 
 /**
  * TransactionEntity represents a blockchain transaction.
@@ -37,14 +45,6 @@ export class TransactionEntity {
   timestamp: number;
 
   @ApiProperty({
-    description:
-      'The address of the Uniswap pool associated with this transaction.',
-    example: '0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640',
-  })
-  @Column({ name: 'pool' })
-  pool: string;
-
-  @ApiProperty({
     description: 'Chain ID where the transaction occurred.',
     example: 1, // Ethereum Mainnet
   })
@@ -79,4 +79,11 @@ export class TransactionEntity {
   })
   @Column('decimal', { name: 'transaction_fee', precision: 38, scale: 18 })
   transactionFee: string;
+
+  @ApiProperty({
+    description: 'Pool entity associated with this transaction.',
+  })
+  @ManyToOne(() => PoolEntity, { nullable: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'pool', referencedColumnName: 'address' })
+  pool: PoolEntity;
 }
