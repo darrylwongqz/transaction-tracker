@@ -3,6 +3,7 @@ import { PricingService } from './pricing.service';
 import { PricingFactory } from './pricing.factory';
 import { PROVIDERS } from './constants/provider.constants';
 import { PricingStrategy } from './interfaces/pricing-strategy.interface';
+import { BinanceKlineParamDto } from '../integrations/binance/dtos/request/binance-kline-param.dto';
 
 describe('PricingService', () => {
   let service: PricingService;
@@ -38,7 +39,10 @@ describe('PricingService', () => {
   describe('getKlineData', () => {
     it('should delegate to the correct strategy based on the provider', async () => {
       const mockProvider = PROVIDERS.BINANCE;
-      const mockParams = { symbol: 'BTCUSDT', interval: '1m' };
+      const mockParams = {
+        symbol: 'BTCUSDT',
+        interval: '1m',
+      } as BinanceKlineParamDto;
       const mockResult = { total: 100, klines: [] };
 
       // Mock the factory and strategy behavior
@@ -56,7 +60,10 @@ describe('PricingService', () => {
 
     it('should throw an error if the provider is unsupported', async () => {
       const invalidProvider = 'unknown';
-      const mockParams = { symbol: 'BTCUSDT', interval: '1m' };
+      const mockParams = {
+        symbol: 'BTCUSDT',
+        interval: '1m',
+      } as BinanceKlineParamDto;
 
       // Mock the factory to throw an error
       (mockFactory.getStrategy as jest.Mock).mockImplementation(() => {
@@ -86,7 +93,7 @@ describe('PricingService', () => {
       );
 
       await expect(
-        service.getKlineData(mockProvider, mockParams),
+        service.getKlineData(mockProvider, mockParams as BinanceKlineParamDto),
       ).rejects.toThrow(errorMessage);
 
       expect(factory.getStrategy).toHaveBeenCalledWith(mockProvider);
@@ -101,7 +108,10 @@ describe('PricingService', () => {
       (mockFactory.getStrategy as jest.Mock).mockReturnValue(mockStrategy);
       (mockStrategy.getKlineData as jest.Mock).mockResolvedValue(mockResult);
 
-      const result = await service.getKlineData(mockProvider, mockParams);
+      const result = await service.getKlineData(
+        mockProvider,
+        mockParams as BinanceKlineParamDto,
+      );
 
       expect(mockStrategy.getKlineData).toHaveBeenCalledWith(mockParams);
       expect(result).toEqual(mockResult);
@@ -119,7 +129,7 @@ describe('PricingService', () => {
       });
 
       await expect(
-        service.getKlineData(mockProvider, invalidParams),
+        service.getKlineData(mockProvider, invalidParams as any),
       ).rejects.toThrow('Invalid parameters');
     });
 
@@ -134,7 +144,7 @@ describe('PricingService', () => {
       );
 
       await expect(
-        service.getKlineData(mockProvider, mockParams),
+        service.getKlineData(mockProvider, mockParams as any),
       ).rejects.toThrow(errorMessage);
 
       expect(mockStrategy.getKlineData).toHaveBeenCalledWith(mockParams);

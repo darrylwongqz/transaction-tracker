@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PricingFactory } from './pricing.factory';
-import { ProviderNameType } from './constants/provider.constants';
+import {
+  ProviderKlineParamDto,
+  ProviderKlineResponseDto,
+  ProviderNameType,
+} from './constants/provider.constants';
 
 @Injectable()
 export class PricingService {
@@ -30,11 +34,13 @@ export class PricingService {
    * @throws `Error` if the provider is not supported (handled by `PricingFactory`).
    * @throws `BadRequestException` or similar if the provider's specific validation fails.
    */
-  async getKlineData(provider: ProviderNameType, params: object) {
-    // Get the appropriate strategy from the factory
+
+  async getKlineData(
+    provider: ProviderNameType,
+    params: ProviderKlineParamDto,
+  ): Promise<ProviderKlineResponseDto> {
     const strategy = this.pricingFactory.getStrategy(provider);
 
-    // Call the strategy's `getKlineData` method
-    return strategy.getKlineData(params);
+    return strategy.getKlineData(params) as Promise<ProviderKlineResponseDto>;
   }
 }
