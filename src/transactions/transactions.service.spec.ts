@@ -1,3 +1,5 @@
+// transactions.service.spec.ts
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { TransactionsService } from './transactions.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
@@ -6,10 +8,13 @@ import { TransactionEntity } from './entities/transaction.entity';
 import { BadRequestException, Logger, NotFoundException } from '@nestjs/common';
 import { PaginatedTransactionsResponseDto } from './dtos/response/paginated-transactions-response.dto';
 import { TransactionResponseDto } from './dtos/response/transactions-response.dto';
+import { plainToInstance } from 'class-transformer';
+import { PoolEntity } from '../pools/entities/pools.entity';
 
 describe('TransactionsService', () => {
   let service: TransactionsService;
   let repository: Repository<TransactionEntity>;
+  let loggerSpy: jest.SpyInstance;
 
   const mockTransaction = {
     hash: '0x125e0b641d4a4b08806bf52c0c6757648c9963bcda8681e4f996f09e00d4c2cc',
@@ -19,7 +24,7 @@ describe('TransactionsService', () => {
     gasUsed: '5201405',
     transactionFeeEth: '0.1',
     transactionFee: '2.5',
-    pool: '0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640',
+    pool: '0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640' as unknown as PoolEntity,
     chainId: 1, // Ethereum Mainnet
   };
 
@@ -44,6 +49,17 @@ describe('TransactionsService', () => {
     repository = module.get<Repository<TransactionEntity>>(
       getRepositoryToken(TransactionEntity),
     );
+
+    // Mock Logger methods to suppress logs during tests
+    loggerSpy = jest
+      .spyOn(Logger.prototype, 'warn')
+      .mockImplementation(() => {});
+    jest.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
+    jest.spyOn(Logger.prototype, 'log').mockImplementation(() => {});
+    jest.spyOn(Logger.prototype, 'debug').mockImplementation(() => {});
+    jest.spyOn(Logger.prototype, 'verbose').mockImplementation(() => {});
+
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -136,11 +152,17 @@ describe('TransactionsService', () => {
 
     it('should throw BadRequestException if startTime or endTime is missing', async () => {
       await expect(
-        service.getTransactions({ startTime: null, endTime: 1620000000 }),
+        service.getTransactions({
+          startTime: null,
+          endTime: 1620000000,
+        } as any),
       ).rejects.toThrow(BadRequestException);
 
       await expect(
-        service.getTransactions({ startTime: 1610000000, endTime: null }),
+        service.getTransactions({
+          startTime: 1610000000,
+          endTime: null,
+        } as any),
       ).rejects.toThrow(BadRequestException);
 
       expect(repository.findAndCount).not.toHaveBeenCalled();
@@ -245,7 +267,7 @@ describe('TransactionsService', () => {
         where: {
           hash: '0x125e0b641d4a4b08806bf52c0c6757648c9963bcda8681e4f996f09e00d4c2cc',
           chainId: 1,
-        }, // Include chainId
+        },
       });
     });
 
@@ -298,7 +320,7 @@ describe('TransactionsService', () => {
       ).rejects.toThrow(Error);
 
       expect(repository.findOne).toHaveBeenCalledWith({
-        where: { hash: validHash, chainId: 1 }, // Add chainId to query
+        where: { hash: validHash, chainId: 1 },
       });
     });
 
@@ -433,12 +455,7 @@ describe('TransactionsService', () => {
 
       // Ensure `repository.save` is called up to the failing transaction
       transactionsWithError.forEach((transaction) => {
-        if (
-          transaction.hash ===
-          '0xerror7890abcdef1234567890abcdef1234567890abcdef1234567890abc'
-        ) {
-          expect(repository.save).toHaveBeenCalledWith(transaction);
-        }
+        expect(repository.save).toHaveBeenCalledWith(transaction);
       });
     });
 
@@ -509,8 +526,7 @@ describe('TransactionsService', () => {
 
       // Ensure a warning was logged for the missing hash
       expect(loggerSpy).toHaveBeenCalledWith(
-        'Transaction without a hash encountered, skipping:',
-        transactionsWithMissingHash[0],
+        'Transaction without a hash encountered, skipping.',
       );
     });
   });

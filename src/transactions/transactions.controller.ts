@@ -9,7 +9,7 @@ import { TransactionResponseDto } from './dtos/response/transactions-response.dt
 import { SupportedChainQueryDto } from './dtos/request/supported-chain-query.dto';
 
 @ApiTags('Transactions')
-// @UseInterceptors(CacheInterceptor)
+@UseInterceptors(CacheInterceptor)
 @Controller('transactions')
 export class TransactionsController {
   constructor(private readonly transactionsService: TransactionsService) {}

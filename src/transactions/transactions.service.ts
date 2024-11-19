@@ -102,32 +102,41 @@ export class TransactionsService {
    * This method performs an upsert operation for each transaction in the provided array,
    * updating existing records or inserting new ones based on the transaction's hash.
    *
+   * ## Deduplication:
+   * - Deduplication is handled within this method to avoid processing the same transaction multiple times.
+   * - Potential sources of duplicates include:
+   *   1. **Overlapping Block Ranges**: Upstream processes might fetch overlapping block ranges from APIs, leading to repeated transactions.
+   *   2. **Multiple Events for a Single Transaction**: A transaction triggering multiple smart contract events can result in duplicate entries sharing the same hash.
+   *   3. **Concurrent or Parallel Processing**: Overlaps between workers processing the same range or pool can introduce duplicates.
+   *   4. **Retry Logic**: Retried operations without idempotency guarantees may reprocess the same transactions.
+   *   5. **Third-Party API Issues**: Inconsistent or redundant data returned by third-party APIs may lead to duplicates.
+   *
+   * ## How Deduplication is Implemented:
+   * - A `seenHashes` Set is used to track hashes that have already been processed in the current batch.
+   * - If a hash is already present in `seenHashes`, the transaction is skipped, and a warning is logged.
+   * - This ensures that each hash is processed only once, avoiding unnecessary database operations and maintaining data integrity.
+   *
    * @param transactions - Array of `Partial<TransactionEntity>` representing transactions to upsert.
    * @returns A promise that resolves to `true` when all transactions are processed.
    */
   async bulkUpdateTransactions(
     transactions: Partial<TransactionEntity>[],
   ): Promise<boolean> {
-    // Use a Set to track unique transaction hashes
     const seenHashes = new Set<string>();
     const bulkOperations: Promise<TransactionEntity>[] = [];
 
     for (const transaction of transactions) {
       if (transaction.hash) {
         if (seenHashes.has(transaction.hash)) {
-          // Log a warning for duplicate transaction hashes
           this.logger.warn(
             `Duplicate transaction hash detected: ${transaction.hash}`,
           );
-        } else {
-          seenHashes.add(transaction.hash);
-          bulkOperations.push(this.transactionRepository.save(transaction));
+          continue; // Skip duplicate
         }
+        seenHashes.add(transaction.hash);
+        bulkOperations.push(this.transactionRepository.save(transaction));
       } else {
-        this.logger.warn(
-          'Transaction without a hash encountered, skipping:',
-          transaction,
-        );
+        this.logger.warn('Transaction without a hash encountered, skipping.');
       }
     }
 

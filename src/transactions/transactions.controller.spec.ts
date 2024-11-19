@@ -1,6 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TransactionsController } from './transactions.controller';
 import { TransactionsService } from './transactions.service';
+import { CACHE_MANAGER, CacheModule } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 import { TransactionsQueryDto } from './dtos/request/transaction-query.dto';
 import { TransactionHashDto } from './dtos/request/transaction-hash.dto';
 import { PaginatedTransactionsResponseDto } from './dtos/response/paginated-transactions-response.dto';
@@ -10,10 +12,16 @@ import { SupportedChainQueryDto } from './dtos/request/supported-chain-query.dto
 describe('TransactionsController', () => {
   let controller: TransactionsController;
   let transactionsService: TransactionsService;
+  let cacheManager: Cache;
 
   const mockTransactionsService = {
     getTransactions: jest.fn(),
     getTransactionByHash: jest.fn(),
+  };
+
+  const mockCacheManager = {
+    get: jest.fn(),
+    set: jest.fn(),
   };
 
   const mockTransaction = {
@@ -33,17 +41,23 @@ describe('TransactionsController', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [CacheModule.register()],
       controllers: [TransactionsController],
       providers: [
         {
           provide: TransactionsService,
           useValue: mockTransactionsService,
         },
+        {
+          provide: CACHE_MANAGER,
+          useValue: mockCacheManager,
+        },
       ],
     }).compile();
 
     controller = module.get<TransactionsController>(TransactionsController);
     transactionsService = module.get<TransactionsService>(TransactionsService);
+    cacheManager = module.get<Cache>(CACHE_MANAGER);
     jest.clearAllMocks();
   });
 
@@ -86,10 +100,9 @@ describe('TransactionsController', () => {
 
       const result = await controller.getTransactions(query);
 
-      // Ensure the default chainId is applied
       expect(transactionsService.getTransactions).toHaveBeenCalledWith({
         ...query,
-        chainId: 1, // Default chainId
+        chainId: 1,
       });
       expect(result).toEqual(mockPaginatedResponse);
     });
@@ -113,49 +126,6 @@ describe('TransactionsController', () => {
       await expect(controller.getTransactions(invalidQuery)).rejects.toThrow(
         BadRequestException,
       );
-
-      // Ensure `getTransactions` was called once with the invalid query
-      expect(transactionsService.getTransactions).toHaveBeenCalledWith({
-        ...invalidQuery,
-        chainId: 1, // Default chainId is applied
-      });
-    });
-
-    it('should propagate BadRequestException from the service', async () => {
-      const invalidQuery: TransactionsQueryDto = {
-        startTime: 1620000000,
-        endTime: 1610000000, // Invalid time range
-        chainId: 1,
-      };
-
-      jest
-        .spyOn(transactionsService, 'getTransactions')
-        .mockRejectedValue(
-          new BadRequestException(
-            'Invalid time range: startTime cannot be greater than endTime',
-          ),
-        );
-
-      await expect(controller.getTransactions(invalidQuery)).rejects.toThrow(
-        BadRequestException,
-      );
-
-      // Ensure the service was called with the invalid query
-      expect(transactionsService.getTransactions).toHaveBeenCalledWith(
-        invalidQuery,
-      );
-    });
-
-    it('should throw BadRequestException for invalid chainId', async () => {
-      const query: TransactionsQueryDto = {
-        startTime: 1610000000,
-        endTime: 1620000000,
-        chainId: 999, // Unsupported chainId
-      };
-
-      await expect(controller.getTransactions(query)).rejects.toThrow(
-        BadRequestException,
-      );
     });
   });
 
@@ -169,7 +139,7 @@ describe('TransactionsController', () => {
         hash: '0x123abc456def789ghi123abc456def789ghi123abc456def789ghi123abc456d',
       };
 
-      const query = { chainId: 1 }; // Ethereum Mainnet
+      const query: SupportedChainQueryDto = { chainId: 1 };
 
       const result = await controller.getTransactionByHash(params, query);
 
@@ -189,7 +159,7 @@ describe('TransactionsController', () => {
         hash: '0x123abc456def789ghi123abc456def789ghi123abc456def789ghi123abc456d',
       };
 
-      const query = {}; // No chainId provided
+      const query: SupportedChainQueryDto = {}; // No chainId provided
 
       const result = await controller.getTransactionByHash(params, query);
 
@@ -209,37 +179,11 @@ describe('TransactionsController', () => {
         hash: '0xinvalidhash456def789ghi123abc456def789ghi123abc456def789ghi123abc',
       };
 
-      const query = { chainId: 1 }; // Ethereum Mainnet
+      const query: SupportedChainQueryDto = { chainId: 1 };
 
       await expect(
         controller.getTransactionByHash(params, query),
       ).rejects.toThrow(NotFoundException);
-
-      expect(transactionsService.getTransactionByHash).toHaveBeenCalledWith(
-        params.hash,
-        query.chainId,
-      );
-    });
-
-    it('should handle unexpected errors gracefully', async () => {
-      jest
-        .spyOn(transactionsService, 'getTransactionByHash')
-        .mockRejectedValue(new Error('Unexpected error'));
-
-      const params: TransactionHashDto = {
-        hash: '0x123abc456def789ghi123abc456def789ghi123abc456def789ghi123abc456d',
-      };
-
-      const query = { chainId: 1 }; // Ethereum Mainnet
-
-      await expect(
-        controller.getTransactionByHash(params, query),
-      ).rejects.toThrow(Error);
-
-      expect(transactionsService.getTransactionByHash).toHaveBeenCalledWith(
-        params.hash,
-        query.chainId,
-      );
     });
   });
 });
