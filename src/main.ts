@@ -6,6 +6,8 @@ import {
   ValidationPipe,
   VersioningType,
 } from '@nestjs/common';
+import { TransactionsModule } from './transactions/transactions.module';
+import { SyncModule } from './sync/sync.module';
 
 async function bootstrap() {
   const isProduction = process.env.NODE_ENV === 'production';
@@ -45,7 +47,9 @@ async function bootstrap() {
     .setVersion('1.0')
     .build();
 
-  const document = SwaggerModule.createDocument(app, config);
+  const document = SwaggerModule.createDocument(app, config, {
+    include: [TransactionsModule, SyncModule],
+  });
   SwaggerModule.setup('documentation', app, document);
 
   await app.listen(process.env.PORT ?? 3000);
