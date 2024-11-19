@@ -5,7 +5,7 @@ import {
 } from '../dtos/request/validate-ethereum-address.dto';
 import { PoolHandlerInterface } from '../interfaces/pool-handler.interface';
 import { BasePoolHandlerService } from './base-pool-handler.service';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 
 /**
  * EthereumPoolHandler
@@ -31,6 +31,7 @@ import { BadRequestException } from '@nestjs/common';
  * - Customize the validation logic for addresses based on network requirements.
  * - Implement enhanced logging for better traceability.
  */
+@Injectable()
 export class EthereumPoolHandler
   implements PoolHandlerInterface<ValidateEthereumAddressDto, EthereumAddress>
 {
@@ -75,10 +76,15 @@ export class EthereumPoolHandler
 
     // Normalize the address to lowercase and fetch the current block
     const normalizedAddress = address.toLowerCase();
-    return this.basePoolHandlerService.getCurrentBlock(
-      normalizedAddress,
-      chainId,
-    );
+    try {
+      const response = await this.basePoolHandlerService.getCurrentBlock(
+        normalizedAddress,
+        chainId,
+      );
+      return response;
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   /**

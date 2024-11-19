@@ -8,6 +8,7 @@ import { PoolHandlerFactory } from './pool-handler.factory';
 import { SolanaPoolHandler } from './handlers/solana-pool.handler';
 import { EthereumPoolHandler } from './handlers/ethereum-pool.handler';
 import { BasePoolHandlerService } from './handlers/base-pool-handler.service';
+import { MigrationService } from './initializers/migrations.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([PoolEntity]), ConfigModule],
@@ -18,7 +19,8 @@ import { BasePoolHandlerService } from './handlers/base-pool-handler.service';
     PoolHandlerFactory,
     PoolsService,
     PoolsInitializer,
+    MigrationService,
   ],
-  exports: [PoolsService],
+  exports: [PoolsService, MigrationService],
 })
 export class PoolsModule {}

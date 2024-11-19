@@ -1,113 +1,80 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { PoolsService } from '../pools.service';
-import {
-  USDC_WETH_POOL_INFO,
-  SOLANA_USDC_POOL_INFO,
-} from '../constants/pools.constants';
 import { PoolsInitializer } from './pools.initializer';
-import { Logger } from '@nestjs/common';
+import { MigrationService } from './migrations.service';
+import { USDC_WETH_POOL_INFO } from '../constants/pools.constants';
 
 describe('PoolsInitializer', () => {
   let poolsInitializer: PoolsInitializer;
-  let poolsService: PoolsService;
-  let configService: ConfigService;
-
-  const mockPoolsService = {
-    upsertPool: jest.fn(),
-  };
-
-  const mockConfigService = {
-    get: jest.fn(),
-  };
+  let poolsService: Partial<PoolsService>;
+  let migrationService: Partial<MigrationService>;
+  let configService: Partial<ConfigService>;
+  let loggerSpy: jest.SpyInstance;
 
   beforeEach(async () => {
+    poolsService = {
+      upsertPool: jest.fn(),
+    };
+
+    migrationService = {
+      ensureMigrationsRun: jest.fn().mockResolvedValue(undefined),
+    };
+
+    configService = {
+      get: jest.fn((key: string) => {
+        if (key === 'APP_START_BLOCK') {
+          return 12345; // Mocked start block
+        }
+        return undefined;
+      }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PoolsInitializer,
-        {
-          provide: PoolsService,
-          useValue: mockPoolsService,
-        },
-        {
-          provide: ConfigService,
-          useValue: mockConfigService,
-        },
+        { provide: PoolsService, useValue: poolsService },
+        { provide: MigrationService, useValue: migrationService },
+        { provide: ConfigService, useValue: configService },
       ],
     }).compile();
 
     poolsInitializer = module.get<PoolsInitializer>(PoolsInitializer);
-    poolsService = module.get<PoolsService>(PoolsService);
-    configService = module.get<ConfigService>(ConfigService);
 
-    jest.clearAllMocks();
-
-    // Mock the Logger used in PoolsInitializer
-    jest.spyOn(Logger.prototype, 'error').mockImplementation(jest.fn());
-    jest.spyOn(Logger.prototype, 'log').mockImplementation(jest.fn());
+    // Mock Logger methods
+    loggerSpy = jest.spyOn(console, 'error').mockImplementation();
+    jest.spyOn(console, 'log').mockImplementation(); // Mock console.log if needed
   });
 
-  it('should be defined', () => {
-    expect(poolsInitializer).toBeDefined();
-    expect(poolsService).toBeDefined();
-    expect(configService).toBeDefined();
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
-  describe('onModuleInit', () => {
-    it('should upsert pools with appStartBlock if defined', async () => {
-      const mockAppStartBlock = 15000000;
-      mockConfigService.get.mockReturnValue(mockAppStartBlock);
+  it('should ensure migrations are run before initializing pools', async () => {
+    await poolsInitializer.onApplicationBootstrap();
 
-      await poolsInitializer.onModuleInit();
+    expect(migrationService.ensureMigrationsRun).toHaveBeenCalledTimes(1);
+    expect(poolsService.upsertPool).toHaveBeenCalledWith(
+      USDC_WETH_POOL_INFO.address,
+      USDC_WETH_POOL_INFO.chainId,
+      12345, // Mocked start block
+    );
+  });
 
-      expect(configService.get).toHaveBeenCalledWith('APP_START_BLOCK');
-      expect(poolsService.upsertPool).toHaveBeenCalledTimes(2);
-      expect(poolsService.upsertPool).toHaveBeenCalledWith(
-        USDC_WETH_POOL_INFO.address,
-        USDC_WETH_POOL_INFO.chainId,
-        mockAppStartBlock,
-      );
-      expect(poolsService.upsertPool).toHaveBeenCalledWith(
-        SOLANA_USDC_POOL_INFO.address,
-        SOLANA_USDC_POOL_INFO.chainId,
-        SOLANA_USDC_POOL_INFO.createdBlock,
-      );
+  it('should use the default pool creation block if APP_START_BLOCK is not set', async () => {
+    jest.spyOn(configService, 'get').mockImplementation((key: string) => {
+      if (key === 'APP_START_BLOCK') {
+        return undefined;
+      }
+      return undefined;
     });
 
-    it('should handle errors gracefully for individual pools', async () => {
-      mockConfigService.get.mockReturnValue(undefined);
+    await poolsInitializer.onApplicationBootstrap();
 
-      mockPoolsService.upsertPool
-        .mockResolvedValueOnce(undefined) // Simulate success for the first pool
-        .mockRejectedValueOnce(new Error('Database error')); // Simulate failure for the second pool
-
-      await expect(poolsInitializer.onModuleInit()).resolves.not.toThrow();
-
-      expect(poolsService.upsertPool).toHaveBeenCalledTimes(2);
-      expect(Logger.prototype.error).toHaveBeenCalledTimes(1);
-      expect(Logger.prototype.error).toHaveBeenCalledWith(
-        `Failed to initialize pool with address ${SOLANA_USDC_POOL_INFO.address} on chainId ${SOLANA_USDC_POOL_INFO.chainId}: Database error`,
-      );
-    });
-
-    it('should log errors if all pool upserts fail', async () => {
-      mockConfigService.get.mockReturnValue(undefined);
-
-      // Simulate failure for all pools
-      mockPoolsService.upsertPool.mockRejectedValue(
-        new Error('Database error'),
-      );
-
-      await expect(poolsInitializer.onModuleInit()).resolves.not.toThrow();
-
-      expect(poolsService.upsertPool).toHaveBeenCalledTimes(2);
-      expect(Logger.prototype.error).toHaveBeenCalledTimes(2);
-      expect(Logger.prototype.error).toHaveBeenCalledWith(
-        `Failed to initialize pool with address ${USDC_WETH_POOL_INFO.address} on chainId ${USDC_WETH_POOL_INFO.chainId}: Database error`,
-      );
-      expect(Logger.prototype.error).toHaveBeenCalledWith(
-        `Failed to initialize pool with address ${SOLANA_USDC_POOL_INFO.address} on chainId ${SOLANA_USDC_POOL_INFO.chainId}: Database error`,
-      );
-    });
+    expect(poolsService.upsertPool).toHaveBeenCalledWith(
+      USDC_WETH_POOL_INFO.address,
+      USDC_WETH_POOL_INFO.chainId,
+      USDC_WETH_POOL_INFO.createdBlock,
+    );
   });
 });

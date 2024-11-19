@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { ChainType } from './constants/pools.enums';
 import { PoolHandlerInterface } from './interfaces/pool-handler.interface';
 import { EthereumPoolHandler } from './handlers/ethereum-pool.handler';
-import { SolanaPoolHandler } from './handlers/solana-pool.handler';
+// import { SolanaPoolHandler } from './handlers/solana-pool.handler';
 
 @Injectable()
 export class PoolHandlerFactory {
@@ -10,12 +10,12 @@ export class PoolHandlerFactory {
 
   constructor(
     private readonly ethereumPoolHandler: EthereumPoolHandler,
-    private readonly solanaPoolHandler: SolanaPoolHandler,
+    // private readonly solanaPoolHandler: SolanaPoolHandler,
   ) {
     // Map handlers to their respective chain types
     this.handlers = {
       [ChainType.ETHEREUM]: this.ethereumPoolHandler,
-      [ChainType.SOLANA]: this.solanaPoolHandler,
+      // [ChainType.SOLANA]: this.solanaPoolHandler,
     };
   }
 

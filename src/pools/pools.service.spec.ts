@@ -3,9 +3,27 @@ import { PoolsService } from './pools.service';
 import { PoolHandlerFactory } from './pool-handler.factory';
 import { ChainType } from './constants/pools.enums';
 import { ValidateEthereumAddressDto } from './dtos/request/validate-ethereum-address.dto';
-import { ValidateSolanaAddressDto } from './dtos/request/validate-solana-address.dto';
+// import { ValidateSolanaAddressDto } from './dtos/request/validate-solana-address.dto';
 import { DataSource } from 'typeorm';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+
+// Mock the poolMap from './constants/pool.utils'
+jest.mock('./constants/pool.utils', () => ({
+  poolMap: {
+    '0x1234567890abcdef1234567890abcdef12345678': {
+      name: 'ETH-USDC Pool',
+      tokens: ['ETH', 'USDC'],
+      // Add other relevant pool properties as needed
+    },
+    '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd': {
+      name: 'DAI-ETH Pool',
+      tokens: ['DAI', 'ETH'],
+      // Add other relevant pool properties as needed
+    },
+  },
+}));
+
+import { poolMap } from './constants/pool.utils'; // This import is now mocked
 
 describe('PoolsService', () => {
   let service: PoolsService;
@@ -26,11 +44,11 @@ describe('PoolsService', () => {
     setCurrentBlock: jest.fn(),
   };
 
-  const mockSolanaHandler = {
-    validateAddress: jest.fn(),
-    getCurrentBlock: jest.fn(),
-    setCurrentBlock: jest.fn(),
-  };
+  // const mockSolanaHandler = {
+  //   validateAddress: jest.fn(),
+  //   getCurrentBlock: jest.fn(),
+  //   setCurrentBlock: jest.fn(),
+  // };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -193,22 +211,22 @@ describe('PoolsService', () => {
       expect(result).toBe(true);
     });
 
-    it('should call the correct handler to validate Solana address', () => {
-      const dto: ValidateSolanaAddressDto = {
-        address: '4UqarBqCVuPQrBCJKMvuogXaGxaJHqHJuj5zwgKpSpSH',
-        chainId: 101,
-      };
-      mockHandlerFactory.getHandler.mockReturnValue(mockSolanaHandler);
-      mockSolanaHandler.validateAddress.mockReturnValue(true);
+    // it('should call the correct handler to validate Solana address', () => {
+    //   const dto: ValidateSolanaAddressDto = {
+    //     address: '4UqarBqCVuPQrBCJKMvuogXaGxaJHqHJuj5zwgKpSpSH',
+    //     chainId: 101,
+    //   };
+    //   mockHandlerFactory.getHandler.mockReturnValue(mockSolanaHandler);
+    //   mockSolanaHandler.validateAddress.mockReturnValue(true);
 
-      const result = service.validateAddress(ChainType.SOLANA, dto);
+    //   const result = service.validateAddress(ChainType.SOLANA, dto);
 
-      expect(mockHandlerFactory.getHandler).toHaveBeenCalledWith(
-        ChainType.SOLANA,
-      );
-      expect(mockSolanaHandler.validateAddress).toHaveBeenCalledWith(dto);
-      expect(result).toBe(true);
-    });
+    //   expect(mockHandlerFactory.getHandler).toHaveBeenCalledWith(
+    //     ChainType.SOLANA,
+    //   );
+    //   expect(mockSolanaHandler.validateAddress).toHaveBeenCalledWith(dto);
+    //   expect(result).toBe(true);
+    // });
 
     it('should throw NotFoundException if no handler is found for the chain type', () => {
       const dto: ValidateEthereumAddressDto = {
@@ -291,29 +309,29 @@ describe('PoolsService', () => {
       expect(result).toBe(currentBlock);
     });
 
-    it('should call the correct handler to get the current block for Solana', async () => {
-      const address = '4UqarBqCVuPQrBCJKMvuogXaGxaJHqHJuj5zwgKpSpSH';
-      const chainId = 101;
-      const currentBlock = 78910;
+    // it('should call the correct handler to get the current block for Solana', async () => {
+    //   const address = '4UqarBqCVuPQrBCJKMvuogXaGxaJHqHJuj5zwgKpSpSH';
+    //   const chainId = 101;
+    //   const currentBlock = 78910;
 
-      mockHandlerFactory.getHandler.mockReturnValue(mockSolanaHandler);
-      mockSolanaHandler.getCurrentBlock.mockResolvedValue(currentBlock);
+    //   mockHandlerFactory.getHandler.mockReturnValue(mockSolanaHandler);
+    //   mockSolanaHandler.getCurrentBlock.mockResolvedValue(currentBlock);
 
-      const result = await service.getCurrentBlock(
-        ChainType.SOLANA,
-        address,
-        chainId,
-      );
+    //   const result = await service.getCurrentBlock(
+    //     ChainType.SOLANA,
+    //     address,
+    //     chainId,
+    //   );
 
-      expect(mockHandlerFactory.getHandler).toHaveBeenCalledWith(
-        ChainType.SOLANA,
-      );
-      expect(mockSolanaHandler.getCurrentBlock).toHaveBeenCalledWith(
-        address,
-        chainId,
-      );
-      expect(result).toBe(currentBlock);
-    });
+    //   expect(mockHandlerFactory.getHandler).toHaveBeenCalledWith(
+    //     ChainType.SOLANA,
+    //   );
+    //   expect(mockSolanaHandler.getCurrentBlock).toHaveBeenCalledWith(
+    //     address,
+    //     chainId,
+    //   );
+    //   expect(result).toBe(currentBlock);
+    // });
 
     it('should throw an error if no handler is found for the chain type', async () => {
       const address = '0x1234567890abcdef1234567890abcdef12345678';
@@ -400,31 +418,31 @@ describe('PoolsService', () => {
       expect(result).toBe(true);
     });
 
-    it('should call the correct handler to set the current block for Solana', async () => {
-      const address = '4UqarBqCVuPQrBCJKMvuogXaGxaJHqHJuj5zwgKpSpSH';
-      const chainId = 101;
-      const blockNumber = 98765;
+    // it('should call the correct handler to set the current block for Solana', async () => {
+    //   const address = '4UqarBqCVuPQrBCJKMvuogXaGxaJHqHJuj5zwgKpSpSH';
+    //   const chainId = 101;
+    //   const blockNumber = 98765;
 
-      mockHandlerFactory.getHandler.mockReturnValue(mockSolanaHandler);
-      mockSolanaHandler.setCurrentBlock.mockResolvedValue(true);
+    //   mockHandlerFactory.getHandler.mockReturnValue(mockSolanaHandler);
+    //   mockSolanaHandler.setCurrentBlock.mockResolvedValue(true);
 
-      const result = await service.setCurrentBlock(
-        ChainType.SOLANA,
-        address,
-        chainId,
-        blockNumber,
-      );
+    //   const result = await service.setCurrentBlock(
+    //     ChainType.SOLANA,
+    //     address,
+    //     chainId,
+    //     blockNumber,
+    //   );
 
-      expect(mockHandlerFactory.getHandler).toHaveBeenCalledWith(
-        ChainType.SOLANA,
-      );
-      expect(mockSolanaHandler.setCurrentBlock).toHaveBeenCalledWith(
-        address,
-        chainId,
-        blockNumber,
-      );
-      expect(result).toBe(true);
-    });
+    //   expect(mockHandlerFactory.getHandler).toHaveBeenCalledWith(
+    //     ChainType.SOLANA,
+    //   );
+    //   expect(mockSolanaHandler.setCurrentBlock).toHaveBeenCalledWith(
+    //     address,
+    //     chainId,
+    //     blockNumber,
+    //   );
+    //   expect(result).toBe(true);
+    // });
 
     it('should throw a NotFoundException if no handler is found for the chain type', async () => {
       const address = '0x1234567890abcdef1234567890abcdef12345678';
@@ -499,6 +517,80 @@ describe('PoolsService', () => {
 
       expect(mockHandlerFactory.getHandler).toHaveBeenCalledWith(
         'unsupported-chain-type',
+      );
+    });
+  });
+
+  describe('getPoolByAddress', () => {
+    it('should return the correct pool for a valid address (case-insensitive)', () => {
+      const validAddressLowerCase =
+        '0x1234567890abcdef1234567890abcdef12345678';
+      const validAddressUpperCase =
+        '0x1234567890ABCDEF1234567890ABCDEF12345678';
+      const validAddressMixedCase =
+        '0x1234567890aBcDeF1234567890AbcDef12345678';
+
+      // Expected pool details from the mocked poolMap
+      const expectedPool = {
+        name: 'ETH-USDC Pool',
+        tokens: ['ETH', 'USDC'],
+        // Add other relevant pool properties as needed
+      };
+
+      // Test with lowercase address
+      const poolLower = service.getPoolByAddress(validAddressLowerCase);
+      expect(poolLower).toEqual(expectedPool);
+
+      // Test with uppercase address
+      const poolUpper = service.getPoolByAddress(validAddressUpperCase);
+      expect(poolUpper).toEqual(expectedPool);
+
+      // Test with mixed-case address
+      const poolMixed = service.getPoolByAddress(validAddressMixedCase);
+      expect(poolMixed).toEqual(expectedPool);
+    });
+
+    it('should throw NotFoundException for an address not in poolMap', () => {
+      const invalidAddress = '0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef';
+
+      expect(() => service.getPoolByAddress(invalidAddress)).toThrow(
+        NotFoundException,
+      );
+      expect(() => service.getPoolByAddress(invalidAddress)).toThrow(
+        `Pool not found for address: ${invalidAddress}`,
+      );
+    });
+
+    it('should throw NotFoundException for an empty address string', () => {
+      const emptyAddress = '';
+
+      expect(() => service.getPoolByAddress(emptyAddress)).toThrow(
+        NotFoundException,
+      );
+      expect(() => service.getPoolByAddress(emptyAddress)).toThrow(
+        `Pool not found for address: ${emptyAddress}`,
+      );
+    });
+
+    it('should throw NotFoundException for a null address', () => {
+      const nullAddress = null as any;
+
+      expect(() => service.getPoolByAddress(nullAddress)).toThrow(
+        NotFoundException,
+      );
+      expect(() => service.getPoolByAddress(nullAddress)).toThrow(
+        `Pool not found for address: ${nullAddress}`,
+      );
+    });
+
+    it('should throw NotFoundException for an undefined address', () => {
+      const undefinedAddress = undefined as any;
+
+      expect(() => service.getPoolByAddress(undefinedAddress)).toThrow(
+        NotFoundException,
+      );
+      expect(() => service.getPoolByAddress(undefinedAddress)).toThrow(
+        `Pool not found for address: ${undefinedAddress}`,
       );
     });
   });

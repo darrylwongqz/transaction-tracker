@@ -49,10 +49,10 @@ describe('PoolHandlerFactory', () => {
       expect(handler).toBe(ethereumHandler);
     });
 
-    it('should return the Solana handler for ChainType.SOLANA', () => {
-      const handler = factory.getHandler(ChainType.SOLANA);
-      expect(handler).toBe(solanaHandler);
-    });
+    // it('should return the Solana handler for ChainType.SOLANA', () => {
+    //   const handler = factory.getHandler(ChainType.SOLANA);
+    //   expect(handler).toBe(solanaHandler);
+    // });
 
     it('should throw NotFoundException for an unsupported chain type', () => {
       expect(() => factory.getHandler(999 as any)).toThrowError(
@@ -75,17 +75,17 @@ describe('PoolHandlerFactory', () => {
       expect(validateSpy).toHaveBeenCalledWith(dto);
     });
 
-    it('should allow Solana handler to validate address', () => {
-      const handler = factory.getHandler(ChainType.SOLANA);
-      const validateSpy = jest.spyOn(handler, 'validateAddress');
-      const dto = {
-        address: '4UqarBqCVuPQrBCJKMvuogXaGxaJHqHJuj5zwgKpSpSH',
-        chainId: 101,
-      };
+    // it('should allow Solana handler to validate address', () => {
+    //   const handler = factory.getHandler(ChainType.SOLANA);
+    //   const validateSpy = jest.spyOn(handler, 'validateAddress');
+    //   const dto = {
+    //     address: '4UqarBqCVuPQrBCJKMvuogXaGxaJHqHJuj5zwgKpSpSH',
+    //     chainId: 101,
+    //   };
 
-      handler.validateAddress(dto);
+    //   handler.validateAddress(dto);
 
-      expect(validateSpy).toHaveBeenCalledWith(dto);
-    });
+    //   expect(validateSpy).toHaveBeenCalledWith(dto);
+    // });
   });
 });

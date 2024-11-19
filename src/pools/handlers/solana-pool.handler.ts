@@ -1,11 +1,11 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import {
   SolanaAddress,
   ValidateSolanaAddressDto,
 } from '../dtos/request/validate-solana-address.dto';
 import { PoolHandlerInterface } from '../interfaces/pool-handler.interface';
 import { BasePoolHandlerService } from './base-pool-handler.service';
-import { CHAIN_MAP } from '../../common/constants';
+// import { CHAIN_MAP } from '../../common/constants';
 
 /**
  * SolanaPoolHandler is an illustrative implementation of the PoolHandlerInterface
@@ -19,6 +19,7 @@ import { CHAIN_MAP } from '../../common/constants';
  *   endpoints to fetch and set block-related data.
  * - Extend or replace the methods with Solana-specific logic as needed.
  */
+@Injectable()
 export class SolanaPoolHandler
   implements PoolHandlerInterface<ValidateSolanaAddressDto, SolanaAddress>
 {
@@ -26,7 +27,9 @@ export class SolanaPoolHandler
     private readonly basePoolHandlerService: BasePoolHandlerService,
   ) {}
 
-  private readonly supportedChainIds = [CHAIN_MAP.SOLANA_MAINNET]; // Example Solana Mainnet chain ID
+  // uncomment solana chainIds when implemented
+  // private readonly supportedChainIds = [CHAIN_MAP.SOLANA_MAINNET]; // Example Solana Mainnet chain ID
+  private readonly supportedChainIds = []; // Example Solana Mainnet chain ID
 
   /**
    * Validates the Solana address.
